@@ -18,6 +18,8 @@ p2state=0
 p2spr=6
 p2dir=0
 p2at=0
+ 
+objects = {}
 end
 
 hitboxcreation = function(x,y)
@@ -35,22 +37,18 @@ end
 return obj
 end
 
-function _draw()
-
-foreach(objects, function(obj)
- spr(obj.sprite, obj.position.x, obj.position.y)
+function collide(obj, other)
+if other.position.x+other.hitbox.x+other.hitbox.w >
+obj.position.x+obj.hitbox.x and
+ other.position.y+other.hitbox.y+other.hitbox.h >
+obj.position.y+obj.hitbox.y and
+ other.position.x+other.hitbox.x <
+obj.position.x+obj.hitbox.x+obj.hitbox.w and
+ other.position.y+other.hitbox.y <
+obj.position.y+obj.hitbox.y+obj.hitbox.h then
+ return true
 end
 end
-
---arena
-rectfill(0,0,128,128,2)
---place the players 
-spr(p1spr,p1x,p1y,1,2,p1dir==-1)
-
-spr(p2spr,p2x,p2y,1,2,p2dir==1)
-end
-
-
 
 function canfall()
 v=mget (flr((p1x+4)/8),flr((p1y+8)/8))
@@ -66,7 +64,7 @@ end
 
 
 
-objects = {}
+
 function _update()
 
 foreach(objects, function(obj)
@@ -130,6 +128,25 @@ if (not p1b2 or p1at>7) change_state(0)
 end
 
 end
+
+function _draw()
+
+foreach(objects, function(obj)
+ spr(obj.sprite, obj.position.x, obj.position.y)
+end
+end
+
+--arena
+rectfill(0,0,128,128,2)
+--place the players 
+spr(p1spr,p1x,p1y,1,2,p1dir==-1)
+
+spr(p2spr,p2x,p2y,1,2,p2dir==1)
+end
+
+
+
+
 
 __gfx__
 00999900009999000000000000999909000000000000000000111100001111000000000000111101000000000000000000000000000000000000000000000000
