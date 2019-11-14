@@ -37,8 +37,8 @@ end
 
 function _draw()
 
-foreach (objects,)function(obj)
-spr(obj.sprite,obj.position.x,obj.position.y)
+foreach(objects, function(obj)
+ spr(obj.sprite, obj.position.x, obj.position.y)
 end
 end
 
@@ -66,8 +66,14 @@ end
 
 
 
-objects={}
+objects = {}
 function _update()
+
+foreach(objects, function(obj)
+ obj.update(obj)
+end
+end
+
 p1b0=btn(0)
 p1b1=btn(1)
 p1b2=btn(2)
@@ -78,14 +84,10 @@ p1at+=1
 
 --attack
 if btnp(5,0) then
-add(objects,hitboxcreation(p1.position.x,p1.position.y))
+add(objects,hitboxcreation(player1.position.x,player1.position.y))
 end
 end
 
-foreach(objects,function(obj)
-obj.update(obj)
-end
-end
 
 --idle
 if p1state==0 then
