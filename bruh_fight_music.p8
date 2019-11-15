@@ -1,65 +1,35 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
-hitboxcreation = function(x,y)
 
-local obj = {}
-obj.position = {x=x,y=y}
-obj.sprite= 3
-
-obj.update = function(this)
-this.position.x +=1
-
-obj.hitbox={x=2,y=4,w=4,h=3}
-end
-
-return obj
-end
-
-
-objects = {}
-
-function _update()
-if btnp(5,0) then
-add(objects,hitboxcreation(player1.position.x,player1.position.y))
-end
-end
-
-foreach (objects,function(obj)
- obj.update(obj)
-end
-end
-
-function _draw()
-foreach(objects, function(obj)
- spr(obj.sprite, obj.position.x, obj.position.y)
-end
-end
-
-function collide(obj, other)
-if other.position.x+other.hitbox.x+other.hitbox.w >
-obj.position.x+obj.hitbox.x and
- other.position.y+other.hitbox.y+other.hitbox.h >
-obj.position.y+obj.hitbox.y and
- other.position.x+other.hitbox.x <
-obj.position.x+obj.hitbox.x+obj.hitbox.w and
- other.position.y+other.hitbox.y <
-obj.position.y+obj.hitbox.y+obj.hitbox.h then
- return true
-end
-end
 
 function _init()
 
-
+ global={}
+ global.timer=0
+global.zpressed=false
+ 
 --players
+ p1={}
 p1x=45
 p1y=64
+p1.isplayer=true
+ p1.speed=2
+ p1.defaultspeed=2
+ p1.chargespeed=.5
+ p1.punchspeed=8
+ p1.punchtimer=0
+ p1.charging=false
+ p1.punching=false
+ p1.life=8
+ p1.ishurt=false
+ p1.recoiltimer=0
 p1state=0
-p1spr=0
+p1.sprite=0
 p1dir=0
 p1at=0
-
+ 
+p2={}
 p2x=55
 p2y=64
 p2state=0
@@ -70,7 +40,44 @@ p2at=0
 
 end
 
+function charge()
+ p1.charging=true
+ p1.sprite=1
+ end
 
+function punch()
+     global.start = true
+     p1.punching = true
+     p1.sprite = 7
+     p1.punchtimer = 0
+end
+
+
+function canfall()
+v=mget (flr((p1x+4)/8),flr((p1y+8)/8))
+return not fget(v,0)
+end
+
+
+
+function change_state(s)
+p1state=s
+p1at=0
+end
+
+
+
+function _draw()
+
+
+
+--arena
+rectfill(0,0,128,128,2)
+--place the players 
+spr(p1spr,p1x,p1y,1,2,p1dir==-1)
+
+spr(p2spr,p2x,p2y,1,2,p2dir==1)
+end
 
 function _update()
 
@@ -129,33 +136,6 @@ if (not p1b2 or p1at>7) change_state(0)
 end
 
 end
-
-function canfall()
-v=mget (flr((p1x+4)/8),flr((p1y+8)/8))
-return not fget(v,0)
-end
-
-
-
-function change_state(s)
-p1state=s
-p1at=0
-end
-
-
-
-function _draw()
-
-
-
---arena
-rectfill(0,0,128,128,2)
---place the players 
-spr(p1spr,p1x,p1y,1,2,p1dir==-1)
-
-spr(p2spr,p2x,p2y,1,2,p2dir==1)
-end
-
 
 
 
