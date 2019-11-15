@@ -7,6 +7,8 @@ function _init()
 
  global={}
  global.timer=0
+ global.zdown = false
+  global.zup = false
 global.zpressed=false
  
 --players
@@ -14,13 +16,16 @@ global.zpressed=false
 p1x=45
 p1y=64
 p1.isplayer=true
+p1.facingleft = false
  p1.speed=2
  p1.defaultspeed=2
  p1.chargespeed=.5
  p1.punchspeed=8
  p1.punchtimer=0
+ p1.moving = false
+ p1.recoiltimer = 0
  p1.charging=false
- p1.punching=false
+ p1.punching = false
  p1.life=8
  p1.ishurt=false
  p1.recoiltimer=0
@@ -40,9 +45,26 @@ p2at=0
 
 end
 
+function move(o)
+			if not o.isplayer then
+							return
+	  end
+end	  
+function movex(o,v)
+if v == 0 then return end
+move(o)
+o.x += v
+end
+
+
 function charge()
  p1.charging=true
  p1.sprite=1
+ end
+ 
+ function updatecharge()
+ if p1.punchspeed < 12 then
+ p1.punchspeed += .25
  end
 
 function punch()
@@ -50,6 +72,33 @@ function punch()
      p1.punching = true
      p1.sprite = 7
      p1.punchtimer = 0
+end
+
+function updatepunch()
+if (p1.punching == true) then 
+p1.punchtimer += 1
+end
+
+--punch move
+
+local prevx = p1.x
+local prevy = p1.y
+local movespeed = p1.punchspeed
+if (p1.punchtimer > 8) then
+movespeed = p1.chargespeed
+end
+if p1.facingleft then
+movex(player,-movespeed)
+else
+movex(player,movespeed)
+end
+end
+
+--cooldown
+if (p1.punchtimer > 16) then
+p1.punching = false
+p1.punchtimer = 0
+end 
 end
 
 
@@ -82,60 +131,133 @@ end
 function _update()
 
 
+p1.moving = false
+p1.speed = p1.defaultspeed
+if p1.charging == true then 
+					p1.speed = p1.chargespeed
+end
+if p1.punching == false and 
+				p1.recoiltimer == 0 then
+		if (btn(0)) then
+						p1.facingleft = true
+						movex(player,-p1.speed)
+end
+		if (btn(1)) then 
+						p1.facingleft = false
+						movex(player,p1.speed)
+						end
+end
 
-p1b0=btn(0)
-p1b1=btn(1)
-p1b2=btn(2)
-p1b3=btnp(5)
+						updatebtnz()
+     updatepunch()
+						if p1.punching == false then 
+							if global.zdown == true then
+									p1.charging = true
+									charge()
+							elseif p1.charging == true then
+										updatecharge()
+							end 
+							if (global.zup == true and 
+							p1.charging == true) then 
+										p1.charging = false
+										punch()
+										end
+								end
+								end
+		
+function updatebtnz()
+  if global.zup == true then
+   global.zup = false
+  end
+     if (btn(4)) then
+         if global.zpressed == false then
+             global.zpressed = true
+             global.zdown = true
+         else
+             global.zdown = false
+         end
+     else
+         if global.zpressed == true then
+             global.zup = true
+             global.zpressed = false
+         end
+     end
+ end
 
-p1x=(p1x+128)%128
-p1at+=1
+function punched(o,v)
+				p1.punchspeed = 1
+				o.ispunched = true
+				o.punchtimer = 12
+				o.speed = v
+				if v > 0 then o.facingleft = false
+				elseif v < 0 then o.facingleft = true end
+				o.movetimer = 0
+				
+				end
+
+function updatepunched(o)
+				if o.punchedtimer == 0 then
+					o.ispunched = false
+					o.speed = 0
+					return
+			end
+			movex(o,o.speed)
+			o,punchedtimer -= 1
+			end
+
+--p1b0=btn(0)
+--p1b1=btn(1)
+--p1b2=btn(2)
+--p1b3=btnp(5)
+
+--p1x=(p1x+128)%128
+--p1at+=1
 
 --attack
 
 
 
 --idle
-if p1state==0 then
- p1spr=0
-if (p1b0 or p1b1) change_state(1)
-if (p1b2) change_state(3)
-end
+--if p1state==0 then
+ --p1spr=0
+--if (p1b0 or p1b1) change_state(1)
+--if (p1b2) change_state(3)
+--end
 
 --walking
-if p1state==1 then
-if(p1b0) p1dir=-1
-if(p1b1)p1dir=1
-p1x+=p1dir*min(p1at,2)
-p1spr=flr(p1at/2)%2
+--if p1state==1 then
+--if(p1b0) p1dir=-1
+--if(p1b1)p1dir=1
+--p1x+=p1dir*min(p1at,2)
+--p1spr=flr(p1at/2)%2
 
-if (not (p1b0 or p1b1)) change_state(0)
-if(p1b2) change_state(3)
-if (canfall()) change_state(2)
-end
+--if (not (p1b0 or p1b1)) change_state(0)
+--if(p1b2) change_state(3)
+--if (canfall()) change_state(2)
+--end
 
-if p1state==2 then 
-p1spr=0
-if (canfall()) then
-if (p1b0)p1x-=1
-if (p1b1)p1x+=1
-p1y+=mine(4,p1at)
-if (not canfall()) p1y=flr(p1y/8)*8
-else
-p1y=flr(p1y/8)*8
-change_state(0)
-end
-end
+--if p1state==2 then 
+--p1spr=0
+--if (canfall()) then
+--if (p1b0)p1x-=1
+--if (p1b1)p1x+=1
+--p1y+=mine(4,p1at)
+--if (not canfall()) p1y=flr(p1y/8)*8
+--else
+--p1y=flr(p1y/8)*8
+--change_state(0)
+--end
+--end
 
-if p1state==3 then
-p1spr=2
-p1y-=6-p1at
-if(p1b0)p1x-=2
-if(p1b1)p1x+=2
-if (not p1b2 or p1at>7) change_state(0)
-end
+--if p1state==3 then
+--p1spr=2
+--p1y-=6-p1at
+--if(p1b0)p1x-=2
+--if(p1b1)p1x+=2
+--if (not p1b2 or p1at>7) change_state(0)
+--end
 
-end
+
 
 
 
