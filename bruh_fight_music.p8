@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
-hitboxcreation = function(x,y)
+hitboxcreation = function(x,y) 
 
 local obj = {}
 obj.position = {x=x,y=y}
