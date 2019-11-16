@@ -45,15 +45,16 @@ p2at=0
 
 end
 
-function move(o)
-			if not o.isplayer then
+function move(p)
+			if not p.isplayer then
 							return
 	  end
+	  p1.moving = true
 end	  
-function movex(o,v)
+function movex(p,v)
 if v == 0 then return end
-move(o)
-o.x += v
+move(p)
+p.x += v
 end
 
 
@@ -101,8 +102,7 @@ p1.punchtimer = 0
 end 
 end
 
-
-function canfall()
+			function canfall()
 v=mget (flr((p1x+4)/8),flr((p1y+8)/8))
 return not fget(v,0)
 end
@@ -112,20 +112,6 @@ end
 function change_state(s)
 p1state=s
 p1at=0
-end
-
-
-
-function _draw()
-
-
-
---arena
-rectfill(0,0,128,128,2)
---place the players 
-spr(p1spr,p1x,p1y,1,2,p1dir==-1)
-
-spr(p2spr,p2x,p2y,1,2,p2dir==1)
 end
 
 function _update()
@@ -149,7 +135,7 @@ end
 end
 
 						updatebtnz()
-     updatepunch()
+    
 						if p1.punching == false then 
 							if global.zdown == true then
 									p1.charging = true
@@ -184,26 +170,45 @@ function updatebtnz()
      end
  end
 
-function punched(o,v)
+function punched(p,v)
 				p1.punchspeed = 1
-				o.ispunched = true
-				o.punchtimer = 12
-				o.speed = v
-				if v > 0 then o.facingleft = false
-				elseif v < 0 then o.facingleft = true end
-				o.movetimer = 0
+				p.ispunched = true
+				p.punchtimer = 12
+				p.speed = v
+				if v > 0 then p.facingleft = false
+				elseif v < 0 then p.facingleft = true end
+				p.movetimer = 0
 				
 				end
 
-function updatepunched(o)
-				if o.punchedtimer == 0 then
-					o.ispunched = false
-					o.speed = 0
+function updatepunched(p)
+				if p.punchedtimer == 0 then
+					p.ispunched = false
+					p.speed = 0
 					return
 			end
-			movex(o,o.speed)
-			o,punchedtimer -= 1
+			movex(p,p.speed)
+			p.punchedtimer -= 1
 			end
+			
+			
+
+
+
+
+
+			
+			function _draw()
+
+
+
+--arena
+rectfill(0,0,128,128,2)
+--place the players 
+spr(p1spr,p1x,p1y,1,2,p1dir==-1)
+
+spr(p2spr,p2x,p2y,1,2,p2dir==1)
+end
 
 --p1b0=btn(0)
 --p1b1=btn(1)
