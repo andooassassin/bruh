@@ -1,17 +1,11 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
-n_players = 2
-start_pos = {8,40,72,104}
-
-
-
-
-
+ music(0)
 
 function _init()
- music(0,1)
- init_one()
+
+ 
  global={}
  global.zdown = false
  global.zup = false
@@ -26,7 +20,7 @@ function _init()
  global.fadeintimer = 24
  
  player={}
- player.x = 58
+ player.x = 54
  player.y = 64
  player.isplayer = true
  player.facingleft = false
@@ -55,9 +49,9 @@ function _init()
 
  
  player2={}
- player2.x = 62
+ player2.x = 66
  player2.y = 64
- player2.isplayer = true
+ player2.isplayer2 = true
  player2.facingleft = false
  player2.sprite = 32, 1, 2
  player2.speed = 1
@@ -91,9 +85,7 @@ function move(o)
     player.moving = true
     // dont do walking anim if punch
     if (player.punching == false and
-        player.charging == false and
-        player.kicking == false and
-        player.kickcharging == false) then
+        player.charging == false) then
      if player.sprite == 0 then
          if player.ishurt then
              player.sprite = 14 // dirty hack
@@ -104,27 +96,30 @@ function move(o)
         elseif player.sprite != 0 then
             player.sprite = 0
         end
-       
+       end
  end
- player2.moving = true
+ 
+function move2(o)
+    if not o.isplayer2 then
+        return
+    end
+    player2.moving = true
     // dont do walking anim if punch
     if (player2.punching == false and
-        player2.charging == false and
-        player2.kicking == false and
-        player2.kickcharging == false) then
+        player2.charging == false) then
      if player2.sprite == 32 then
          if player2.ishurt then
              player2.sprite = 14 // dirty hack
          else
-             player2.sprite = 35
+             player2.sprite = 34
          
             end
         elseif player2.sprite != 32 then
             player2.sprite = 32
         end
-       
+       end
  end
-end
+
 
 function movex(o,v)
     if v == 0 then return end
@@ -135,7 +130,7 @@ function movex(o,v)
  if (collisions.l or collisions.r) then
      o.x -= v
      movex(o,v/2)
-     if (o.isenemy == true and
+     if (o.isplayer2 == true and
          o.ispunched == true) then
          o.ispunched = false
             killenemy(o)
@@ -146,6 +141,25 @@ function movex(o,v)
 
 end
 
+function movex2(o,v)
+    if v == 0 then return end
+    move2(o)
+    o.x += v
+
+ local collisions = cmap(o)
+ if (collisions.l or collisions.r) then
+     o.x -= v
+     movex2(o,v/2)
+     if (o.isplayer == true and
+         o.ispunched == true) then
+         o.ispunched = false
+            killenemy(o)
+     end
+ end
+    
+
+
+end
 
 function movey(o,v)
     if v == 0 then return end
@@ -157,52 +171,31 @@ function movey(o,v)
      o.y -= v
      movey(o,v/2)
  end
-   end 
-
-function kickcharge()
-    player.kickcharging = true
-    player.sprite = 3
-    player.kickspeed = 3
-    sfx(3,2)
+   end
    
-    player2.kickcharging = true
-    player2.sprite = 35
-    player2.kickspeed = 3
-    sfx(3,2)
-    end
-  
-    
-    function updatekickcharge()
- if player.kickspeed < 12 then
-     player.kickspeed += .25
-    end
-    if player.kickspeed == 8 then
-     sfx(7,2)
-    elseif player.kickspeed == 11 then
-        sfx(8,2)
-    end
-    player.sprite += 1
-    if player.sprite > 5 then
-        player.sprite = 3
-    end
-    if player2.kickspeed < 12 then
-     player2.kickspeed += .25
-    end
-    if player2.kickspeed == 8 then
-     sfx(7,2)
-    elseif player2.kickspeed == 11 then
-        sfx(8,2)
-    end
-    player2.sprite += 33
-    if player2.sprite > 36 then
-        player2.sprite = 34
-    end
-end
+   function movey2(o,v)
+    if v == 0 then return end
+    move2(o)
+    o.y += v
+   
+ local collisions = cmap(o)
+ if (collisions.t or collisions.b) then
+     o.y -= v
+     movey2(o,v/2)
+ end
+   end  
 
 function charge()
     player.charging = true
     player.sprite = 3
     player.punchspeed = 3
+    sfx(3,2)
+end
+
+function charge2()    
+    player2.charging = true
+    player2.sprite = 35
+    player2.punchspeed = 3
     sfx(3,2)
 end
 
@@ -212,94 +205,57 @@ function updatecharge()
     end
     if player.punchspeed == 8 then
      sfx(7,2)
+     sfx(-3,2)
     elseif player.punchspeed == 11 then
         sfx(8,2)
+        sfx(-3,2)
+        
     end
     player.sprite += 1
-    if player.sprite > 3 then
+    if player.sprite > 5 then
         player.sprite = 3
     end
-end
-
-function kick()
-    global.start = true
-    player.kicking = true
-    player.sprite = 6,2,2
-    player.kicktimer = 0
-    sfx(4,2)
    
-    player2.kicking = true
-    player2.sprite = 6,2,2
-    player2.kicktimer = 0
-    sfx(4,2)
 end
 
-function updatekick()
-    if (player.kicking == true) then
-        player.kicktimer += 1
-        if player.sprite < 5 then
-            player.sprite += 1
-        end
-       
-     // punchmovement
-     local prevx = player.x
-     local prevy = player.y
-     local movespeed = player.kickspeed
-     if (player.kicktimer > 8) then
-         movespeed = player.kickchargespeed
-     end
-     if player.facingleft then
-         movex(player,-movespeed)
-     else
-      movex(player,movespeed)
-  end
+function updatecharge2() 
+    if player2.punchspeed < 12 then
+     player2.punchspeed += .25
     end
-    // cooldown
-    if (player.kicktimer > 16) then
-        player.kicking = false
-        player.sprite = 0
-        player.kicktimer = 0
+    if player2.punchspeed == 8 then
+     sfx(7,2)
+    elseif player2.punchspeed == 11 then
+        sfx(7,2)
     end
-    if (player2.kicking == true) then
-        player2.kicktimer += 1
-        if player2.sprite < 36 then
-            player2.sprite += 33
-        end
-       
-     // punchmovement
-     local prevx = player2.x
-     local prevy = player2.y
-     local movespeed = player2.kickspeed
-     if (player2.kicktimer > 8) then
-         movespeed = player2.kickchargespeed
-     end
-     if player2.facingleft then
-         movex(player2,-movespeed)
-     else
-      movex(player2,movespeed)
-  end
+    player2.sprite += 1
+    if player2.sprite > 37 then
+        player2.sprite = 35
     end
-    // cooldown
-    if (player2.kicktimer > 16) then
-        player2.kicking = false
-        player2.sprite = 32
-        player2.kicktimer = 0
-    end
-end
-
+ end
+ 
 function punch()
     global.start = true
     player.punching = true
-    player.sprite = 4
+    player.sprite = 6
     player.punchtimer = 0
     sfx(4,2)
+    sfx(-1,2)
+    player.hitbox = {x=1,y=2,w=1,h=2}
+    end
+    
+function punch2()
+ player2.punching = true
+    player2.sprite = 38
+    player2.punchtimer = 0
+    sfx(4,2)
+    player2.hitbox = {x=1,y=2,w=1,h=2}
 end
 
 function updatepunch()
     if (player.punching == true) then
         player.punchtimer += 1
-        if player.sprite < 4 then
-            player.sprite += 1
+        if player.sprite < 6 then
+            player.sprite += 6
         end
        
      // punchmovement
@@ -321,7 +277,37 @@ function updatepunch()
         player.sprite = 0
         player.punchtimer = 0
     end
+   
 end
+
+function updatepunch2()
+ 
+    if (player2.punching == true) then
+        player2.punchtimer += 1
+        if player2.sprite < 38 then
+            player2.sprite += 38
+        end
+       
+     // punchmovement
+     local prevx = player2.x
+     local prevy = player2.y
+     local movespeed = player2.punchspeed
+     if (player2.punchtimer > 8) then
+         movespeed = player2.chargespeed
+     end
+     if player2.facingleft then
+         movex2(player2,-movespeed)
+     else
+      movex2(player2,movespeed)
+  end
+    end
+    // cooldown
+    if (player2.punchtimer > 16) then
+        player2.punching = false
+        player2.sprite = 32
+        player2.punchtimer = 0
+    end
+    end
 
 function hurtplayer(v)
     if player.hurttimer <= 0 and
@@ -333,6 +319,20 @@ function hurtplayer(v)
   player.recoiltimer = 10
   player.recoilspeed = v
   global.shaketimer = 10
+  sfx(6,2)
+ end
+end
+
+function hurtplayer2(v)
+    if player2.hurttimer <= 0 and
+        player2.punching == false then
+        player2.ishurt = true
+  player2.life -= 1
+  player2.hurttimer = 48
+  player2.sprite = 14
+  player2.recoiltimer = 10
+  player2.recoilspeed = v
+  global2.shaketimer = 10
   sfx(6,2)
  end
 end
@@ -366,10 +366,53 @@ function updatehurt()
 
 end
 
+function updatehurt2()
+    if player2.life == 0 and player2.isdead == false then
+        player2.isdead = true
+        music(2)
+        return
+    end
+    if player2.ishurt == false then
+        return
+    end
+    if player2.recoiltimer > 0 then
+        player2.x += player2.recoilspeed
+        player2.recoiltimer -= 1
+        player2.x = max(16,
+            min(player2.x,114))
+    end
+    player2.hurttimer -= 1
+    if player2.sprite == 14 then
+     player2.sprite = 15
+    elseif player2.sprite == 15 then
+        player2.sprite = 14
+    end
+   
+    if player2.hurttimer == 0 then
+        player2.ishurt = false
+        player2.sprite = 1
+    end
+
+end
+
 function change_state()
 player.state = s 
 player.at =  0
 end
+
+function collide (player,player2)
+						if player2.x+player2.hitbox.x+player2.hitbox.w>
+						player.x+player.hitbox.x and
+						player2.y+player2.hitbox.y+player2.hitbox.h>
+						player.y+player.hitbox.y and
+						player2.x+player2.hitbox.x<
+						player.x+player.hitbox.x+obj.hitbox.w and 
+						player2.y+player2.hitbox.y<
+						player.y+player.hitbox.y+player.hitbox.h then 
+						return true
+						end
+						end
+
 
 -->8
 function _update()
@@ -389,33 +432,63 @@ function _update()
     player.speed = player.defaultspeed
     if player.charging == true then
         player.speed = player.chargespeed
+        
     end
+    
+    player2.moving = false
+    player2.speed = player2.defaultspeed
+    if player2.charging == true then
+        player2.speed = player2.chargespeed
+        end
+        
     if player.punching == false and
         player.recoiltimer == 0 then
-     if (btn(0)) then
+     if (btn(0,0)) then
          player.facingleft = true
          movex(player,-player.speed)
-         sfx(3)
+         sfx(6)
      end
-     if (btn(1)) then 
+     if (btn(1,0)) then 
          player.facingleft = false
          movex(player,player.speed)
-         sfx(5)
+         sfx(6)
      end
-     if (btn(2)) then
+     if (btn(2,0)) then
          movey(player,-player.speed)
-         sfx(3)
+         sfx(6)
      end
-     if (btn(3)) then
+     if (btn(3,0)) then
          movey(player,player.speed)
-         sfx(5)
+         sfx(6)
      end
-
+     if player2.punching == false and
+        player2.recoiltimer == 0 then
+     if (btn(0,1)) then
+         player2.facingleft = true
+         movex2(player2,-player2.speed)
+         sfx(8)
+     end
+     if (btn(1,1)) then 
+         player2.facingleft = false
+         movex2(player2,player2.speed)
+         sfx(8)
+     end
+     if (btn(2,1)) then
+         movey2(player2,-player2.speed)
+         sfx(8)
+     end
+     if (btn(3,1)) then
+         movey2(player2,player2.speed)
+         sfx(8)
+     end
+end
  end
    
     updatebtnz()
+    updatebtnz2()
     updatepunch()
-    updatekick()
+    updatepunch2()
+  
     if player.punching == false then
      if global.zdown == true then
          player.charging = true
@@ -423,34 +496,34 @@ function _update()
      elseif player.charging == true then
          updatecharge()
      end
+     if player2.punching == false then
+     if global.xdown == true then
+         player2.charging = true
+         charge2()
+     elseif player2.charging == true then
+         updatecharge2()
+     end
+     
      if (global.zup == true and
      player.charging == true) then
          player.charging = false
          punch()
      end
-     if player.kicking == false then
-     if global.zdown == true then
-         player.kickcharging = true
-         kickcharge()
-     elseif player.kickcharging == true then
-         updatekickcharge()
+     if (global.xup == true and
+     player2.charging == true) then
+         player2.charging = false
+         punch2()
      end
-     if (global.zup == true and
-     player.kickcharging == true) then
-         player.kickcharging = false
-         kick()
-     end
-    end
    end
-   
-   
+   end
     updatehurt()
 end
 function updatebtnz()
  if global.zup == true then
   global.zup = false
+
  end
-    if (btn(4)) then
+    if (btn(4,0)) then
         if global.zpressed == false then
             global.zpressed = true
             global.zdown = true
@@ -462,8 +535,15 @@ function updatebtnz()
             global.zup = true
             global.zpressed = false
         end
+      
     end
-    if (btn(5)) then
+  end  
+  function updatebtnz2()
+ if global.xup == true then
+  global.xup = false
+
+ end
+    if (btn(5,0)) then
         if global.xpressed == false then
             global.xpressed = true
             global.xdown = true
@@ -475,23 +555,10 @@ function updatebtnz()
             global.xup = true
             global.xpressed = false
         end
+      
     end
 end
 
-function anim(o,sf,nf,sp,fl)
-  if(not o.a_ct) o.a_ct=0
-  if(not o.a_st) o.a_st=0
-
-  o.a_ct+=1
-
-  if(o.a_ct%(30/sp)==0) then
-    o.a_st+=1
-    if(o.a_st==nf) o.a_st=0
-  end
-
-  o.a_fr=sf+o.a_st
-  spr(o.a_fr,o.x,o.y,1,2,fl)
-end
 -->8
 function _draw()
     cls()
@@ -570,17 +637,7 @@ function punched(o,v)
  global.shaketimer = 5
 end
 
-function kicked(o,v)
-    player.kickspeed = 1
-    o.iskicked = true
-    o.kickedtimer = 12
-    o.speed = v
-    if v > 0 then o.facingleft = false
-    elseif v < 0 then o.facingleft = true end
-    o.movetimer = 0 // stop random movement
-   
- global.shaketimer = 5
-end
+
 
 
 function updatepunched(o)
@@ -593,28 +650,8 @@ function updatepunched(o)
     o.punchedtimer -= 1
 end
 
-function updatekicked(o)
-    if o.kickedtimer == 0 then
-        o.iskicked = false
-        o.speed = 0
-        return
-    end
-    movex(o,o.speed)
-    o.kickedtimer -= 1
-end
 
-function init_one()
-cls()
-			create_players(n_players)
-			end
-			
-function update_one(p)
-		if btn(6,p.num-1) then
-			p.pos[2]-=1
-		elseif btn(7,p.num-1) then
-			p.pos[2]+=1
-		end
-	end	
+
 
 			
 function draw_one(p)
@@ -624,16 +661,7 @@ function draw_one(p)
 		end
 		
 		
-function create_players(n)
 
-		players = {}
-		for i=1,n do
-				p = {}
-				p.num = i
-				p.pos = {start_pos[i], 64}
-				add(players,p)
-				end
-end
 
 
 
@@ -644,10 +672,10 @@ function cmap(o)
     local y1=o.y/8
     local x2=(o.x+7)/8
     local y2=(o.y+7)/8
-    local a=fget(mget(x1,y1),0)
-    local b=fget(mget(x1,y2),0)
-    local c=fget(mget(x2,y2),0)
-    local d=fget(mget(x2,y1),0)   
+    local a=fget(mget(x1,y1),1)
+    local b=fget(mget(x1,y2),1)
+    local c=fget(mget(x2,y2),1)
+    local d=fget(mget(x2,y1),1)   
    
     local collisions = {}
     collisions.l = a and b
@@ -737,12 +765,15 @@ __gfx__
 00100100001000100010000001000010001001000100001000001001000000000000000000000000000000000000000000000000000000000000000000000000
 00100100001000000010000001000010001001000100001000001001000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-000600000c0500e0500c0000e0500c0500e0000c0500e0500c0000e0500c0500e0000c0500e0500c0000e0500c0500e0500c0000e0500c0500e0000c0500e0500c0000e0500c0500e0000c0500e0500c0000e050
-001000001315015150161501115013150151501615011150131501515016150111501315015150161501115013150151501615011150131501515016150111501315015150161501115013150151501615011150
-001000001935028600313502760027600203500000015350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000800001355014550105000000000000000000000000000000000000000000135001450013500145001350014500135001450013500145001450000000145000000014500135001450014500000001450000000
-0010000000000000001c3501d35018350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000f0000135500f550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010e00000c0630630006300063000c0630000000000000000c0630000000000000000c0630000000000000000c0630000000000000000c0630000000000000000c0630000000000000000c063000000000000000
+011000001310015100161001110013100151001610011100131001510016100111001310015100161001110013100151001610011100131001510016100111001310015100161001110013100151001610011100
+010600000f0650f065313000f0650f065023000f0650f065000000f0650f065023000f0650f065000000f0650f065023000f0650f065000000f0650f065023000f0650f065000000f0650f065023000f0650f065
+010800001f5651f56114561145611f5611f56114561145611f5611f56114561145611f5611f56114561145611f5611f56114561145611f5611f56114561145611f5611f56114561145611f5611f5611456114561
+011000000c065000001c3000d2650f265102650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010f00001956501561025610456107561000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+011000002b06400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+011000000c0650e065130650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+011000002c36400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __music__
-00 00024344
+03 00024344
 
