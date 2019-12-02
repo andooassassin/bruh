@@ -46,6 +46,8 @@ function _init()
  player.recoiltimer = 0
  player.isdead = false
  player.deadtimer = 11
+ player.cm = true
+ player.cw = true
 
  
  player2={}
@@ -75,6 +77,8 @@ function _init()
  player2.recoiltimer = 0
  player2.isdead = false
  player2.deadtimer = 11
+ player2.cm = true
+ player2.cw = true
 
 end
 -->8
@@ -668,6 +672,9 @@ function draw_one(p)
 -->8
  // collisions
 function cmap(o)
+    local ct = false
+    local cb = false
+
     local x1=o.x/8
     local y1=o.y/8
     local x2=(o.x+7)/8
@@ -682,6 +689,12 @@ function cmap(o)
     collisions.r = c and d
     collisions.t = a and d
     collisions.b = b and c
+    end
+	
+    if(o.cw) then
+	cb=(o.x<0 or o.x+8>w or
+                         o.y<0 or o.y+8>h)
+  end
    
     return collisions
 end
