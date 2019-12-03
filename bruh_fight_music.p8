@@ -679,10 +679,10 @@ function cmap(o)
     local y1=o.y/8
     local x2=(o.x+7)/8
     local y2=(o.y+7)/8
-    local a=fget(mget(x1,y1),1)
-    local b=fget(mget(x1,y2),1)
-    local c=fget(mget(x2,y2),1)
-    local d=fget(mget(x2,y1),1)   
+    local a=fget(mget(x1,y1),0)
+    local b=fget(mget(x1,y2),0)
+    local c=fget(mget(x2,y2),0)
+    local d=fget(mget(x2,y1),0)   
    
     local collisions = {}
     collisions.l = a and b
